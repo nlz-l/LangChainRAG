@@ -24,6 +24,7 @@ frontend/dist/
 
 # ChromaDB
 backend/chroma_db/
+backend/chroma_db_test/
 
 # Uploads
 backend/uploads/
