@@ -1,0 +1,58 @@
+#!/bin/bash
+# Git Pre-Commit Hook — 提交前检查
+
+RED="\033[31m"
+GREEN="\033[32m"
+YELLOW="\033[33m"
+NC="\033[0m"
+
+PASS=true
+
+echo ""
+echo -e "${YELLOW}========================================"
+echo "  Pre-Commit Quality Gate"
+echo -e "========================================${NC}"
+echo ""
+
+# 1. 检查 .env 是否被意外提交
+STAGED_FILES=$(git diff --cached --name-only)
+ENV_FILES=$(echo "$STAGED_FILES" | grep -E "\.env$" || true)
+
+if [ -n "$ENV_FILES" ]; then
+    echo -e "${RED}[FAIL] .env file(s) in staging area:${NC}"
+    echo "$ENV_FILES"
+    echo ""
+    echo "These files may contain API keys. If they're example files, rename to .env.example"
+    echo "Otherwise, remove them from staging: git restore --staged <file>"
+    PASS=false
+else
+    echo -e "${GREEN}[PASS] No .env files in staging${NC}"
+fi
+
+# 2. 检查是否有未解决的合并冲突
+CONFLICTS=$(echo "$STAGED_FILES" | xargs grep -l "^<<<<<<< " 2>/dev/null || true)
+if [ -n "$CONFLICTS" ]; then
+    echo -e "${RED}[FAIL] Merge conflicts found in:${NC}"
+    echo "$CONFLICTS"
+    PASS=false
+else
+    echo -e "${GREEN}[PASS] No merge conflicts${NC}"
+fi
+
+echo ""
+
+if [ "$PASS" = false ]; then
+    echo -e "${RED}========================================"
+    echo "  Pre-commit check FAILED"
+    echo -e "========================================${NC}"
+    echo ""
+    echo "Fix the issues above and try again."
+    echo "To skip this check: git commit --no-verify"
+    exit 1
+fi
+
+echo -e "${GREEN}========================================"
+echo "  Pre-commit check PASSED"
+echo -e "========================================${NC}"
+echo ""
+exit 0
