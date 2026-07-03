@@ -71,11 +71,20 @@ async def stream_qa(
     if session and session.title == "新对话" and len(history) == 0:
         await generate_session_title(db, session, question)
 
-    # 4. 检索 + 流式生成
+    # 4. 检索 + 流式生成（Mock 模式下直接返回模拟文本）
     full_answer = ""
-    async for chunk in stream_rag_response(question, history):
-        full_answer += chunk
-        yield chunk
+    if settings.STRESS_TEST_MODE:
+        import asyncio
+        mock_answer = f"这是对您问题「{question}」的模拟回答。在压力测试模式下，真实 LLM 调用已被 Mock 替代。"
+        for i in range(0, len(mock_answer), 10):
+            chunk = mock_answer[i:i+10]
+            full_answer += chunk
+            yield chunk
+            await asyncio.sleep(0.05)
+    else:
+        async for chunk in stream_rag_response(question, history):
+            full_answer += chunk
+            yield chunk
 
     # 5. 获取引用来源
     vectorstore = get_vectorstore()

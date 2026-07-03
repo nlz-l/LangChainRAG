@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     # Redis (可选)
     REDIS_URL: str = os.getenv("REDIS_URL", "")
 
+    # 压力测试 Mock 模式（不调用真实 LLM/Embedding API）
+    STRESS_TEST_MODE: bool = os.getenv("STRESS_TEST_MODE", "").lower() in ("true", "1", "yes")
+
     # 限流
     RATE_LIMIT_GLOBAL: str = "30/minute"
     RATE_LIMIT_CHAT: str = "10/minute"
